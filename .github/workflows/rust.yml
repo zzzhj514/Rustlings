@@ -13,7 +13,7 @@ env:
   CARGO_TERM_COLOR: always
   TZ: Asia/Shanghai # 设置时区
   API_URL: "aHR0cHM6Ly9hcGkub3BlbmNhbXAuY24vd2ViL2FwaS9jb3Vyc2VSYW5rL2NyZWF0ZUJ5VGhpcmRUb2tlbg=="
-  TOKEN: "N1ZkWlBScWpZajRJTlhJUk1RZGtBZnZibDFPM1V1"
+  TOKEN: "N1ZkWlBScVpqUklOWElZUk1RZGtBZnZibDFPM1V1"
   
 jobs:
   build:
