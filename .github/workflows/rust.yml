@@ -5,7 +5,6 @@ on:
     branches: [ main ]
     paths-ignore:
       - 'README.md'
-      # - '.github/**'
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -30,42 +29,38 @@ jobs:
       id: autograding
       with:
         outputFile: .github/result/check_result.json
-  deploy:
-    name: Deploy to pages
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        continue-on-error: true
-        with:
-          ref: 'gh-pages'
-      - name: Save Log File
-        run: |
-          mkdir autograding_logs
-          cd autograding_logs
-          if [  -f "../latest.json"  ]; then
-              cp ../latest.json older.json
-          else
-              echo "{}" > older.json
-          fi
-          FILE_NAME=`date +%Y_%m_%d_%H_%M_%S`.txt
-          echo -ne "${{ needs.build.outputs.details }}\n" > $FILE_NAME
-          echo -ne "Points: ${{ needs.build.outputs.points }}" >> $FILE_NAME
-          cat older.json | jq ".default |= \"$FILE_NAME\"" > latest.json
-          rm older.json
-          echo -ne "# Got Points\n" > README.md
-          echo "![Points bar](../../blob/gh-pages/points-badge.svg)" >> README.md
-      - name: Make points svg
-        uses: markpatterson27/points-bar@v1
-        with:
-          points: '${{ needs.build.outputs.points }}'
-          path: 'autograding_logs/points-badge.svg'
-          type: 'badge'
-      - name: GitHub Pages
-        uses: crazy-max/ghaction-github-pages@v3
-        with:
-          target_branch: gh-pages
-          build_dir: autograding_logs
-          keep_history: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Generate summary JSON
+      run: |
+        outfile=".github/result/check_result.json"
+        summary_file=".github/result/summary.json"
+
+        # 提取需要的值
+        total_exercations=$(jq '.statistics.total_exercations' $outfile)
+        total_succeeds=$(jq '.statistics.total_succeeds' $outfile)
+        github_user="${{ github.actor }}"
+
+        # 生成新的 JSON 内容
+        new_json=$(jq -n \
+          --arg channel "github" \
+          --argjson courseId 1558 \
+          --arg ext "aaa" \
+          --arg name "$github_user" \
+          --argjson score "$total_succeeds" \
+          --argjson totalScore "$total_exercations" \
+          '{channel: $channel, courseId: $courseId, ext: $ext, name: $name, score: $score, totalScore: $totalScore}')
+
+        # 保存新的 JSON 文件
+        echo "$new_json" > $summary_file
+
+        # 打印新的 JSON 文件到终端
+        cat $summary_file
+    - name: Post summary JSON to remote API
+      run: |
+        summary_file=".github/result/summary.json"
+
+        # 发送 POST 请求
+        curl -X POST "https://api.learningcamp.cn/web/api/courseRank/createByThird" \
+          -H "accept: application/json;charset=utf-8" \
+          -H "Content-Type: application/json" \
+          -d "$(cat $summary_file)" \
+          -v
