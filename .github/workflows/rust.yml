@@ -14,7 +14,7 @@ env:
   TZ: Asia/Shanghai # 设置时区
   ENCODED_API_URL: "aHR0cHM6Ly9hcGkub3BlbmNhbXAuY24vd2ViL2FwaS9jb3Vyc2VSYW5rL2NyZWF0ZUJ5VGhpcmRUb2tlbg=="
   TROKEN: "N1ZkWlBScWpZajRJTlhJUk1RZGtBZnZibDFPM1V1"
-
+  
 jobs:
   build:
     name: Autograding
@@ -24,16 +24,15 @@ jobs:
       points: ${{ steps.autograding.outputs.points}}
       api_url: ${{ steps.decode_api_url.outputs.url }}
       token:   ${{ steps.decode_token.outputs.token }}
-
     steps:
     - name: Decode API URL
       id: decode_api_url
       run: |
-        echo "url=$(echo "$ENCODED_API_URL" | base64 --decode)"  >> "$GITHUB_OUTPUT"
+        echo "url=$(echo "$ENCODED_API_URL" | base64 --decode)"  >> "$API_URL"
     - name: Decode Token
       id: decode_token
       run: |
-        echo "token=$(echo "$TROKEN" | base64 --decode)"  >> "$GITHUB_OUTPUT"
+        echo "token=$(echo "$TROKEN" | base64 --decode)"  >> "$TOKEN"
     - uses: actions/checkout@v3
     - name: Run tests
       run: cargo test --test cicv --verbose
