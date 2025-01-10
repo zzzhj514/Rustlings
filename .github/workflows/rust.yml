@@ -21,18 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       details: ${{ steps.autograding.outputs.details }}
-      points: ${{ steps.autograding.outputs.points}}
-      api_url: ${{ steps.decode_api_url.outputs.url }}
-      token:   ${{ steps.decode_token.outputs.token }}
+      points: ${{ steps.autograding.outputs.points }}
     steps:
     - name: Decode API URL
       id: decode_api_url
       run: |
-        echo "url=$(echo "$API_URL" | base64 --decode)"  >> "$API_URL"
+        echo "url=$(echo "$API_URL" | base64 --decode)" >> $GITHUB_ENV
     - name: Decode Token
       id: decode_token
       run: |
-        echo "token=$(echo "$TOKEN" | base64 --decode)"  >> "$TOKEN"
+        echo "token=$(echo "$TOKEN" | base64 --decode)" >> $GITHUB_ENV
     - uses: actions/checkout@v3
     - name: Run tests
       run: cargo test --test cicv --verbose
@@ -70,9 +68,9 @@ jobs:
         summary_file=".github/result/summary.json"
 
         # 发送 POST 请求
-        curl -X POST "$API_URL" \
+        curl -X POST "$url" \
           -H "accept: application/json;charset=utf-8" \
           -H "Content-Type: application/json" \
-          -H "token: $TOKEN"\
+          -H "token: $token" \
           -d "$(cat $summary_file)" \
           -v
